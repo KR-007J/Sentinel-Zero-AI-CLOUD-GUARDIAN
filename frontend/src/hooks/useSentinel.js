@@ -62,21 +62,52 @@ export function useSimulatedAttack(addTerminalLine) {
   const [isSimulating, setIsSimulating] = useState(false);
   const timeoutRefs = useRef([]);
 
-  const simulate = useCallback(async () => {
+  const simulate = useCallback(async (type = 'brute_force_ssh') => {
     if (isSimulating) return;
     setIsSimulating(true);
 
-    const sequence = [
-      { delay: 0,    type: 'system',  text: '[ATTACK SIM] Initiating brute-force SSH simulation...' },
-      { delay: 600,  type: 'warning', text: '[SIM] Generating 1200 failed auth packets from 198.51.100.77' },
-      { delay: 1400, type: 'warning', text: '[13:XX:XX] ANOMALY DETECTED — 1,200 failed SSH attempts (198.51.100.77)' },
-      { delay: 2000, type: 'info',    text: '[GEMINI] Dispatching log batch to Vertex AI for analysis...' },
-      { delay: 2800, type: 'success', text: '[GEMINI] CRITICAL — Brute Force SSH Attack | Confidence: 97.2%' },
-      { delay: 3400, type: 'success', text: '[REMEDY] Invoking Cloud Armor — blocking IP 198.51.100.77' },
-      { delay: 3900, type: 'success', text: '[REMEDY] SSH key rotation triggered on affected VMs' },
-      { delay: 4500, type: 'success', text: '[REMEDY] Security alert dispatched to Cloud Monitoring' },
-      { delay: 5000, type: 'success', text: '✓ THREAT NEUTRALIZED — MTTR: 0.31s | Auto-remediated' },
-    ];
+    const SEQUENCES = {
+      brute_force_ssh: [
+        { delay: 0,    type: 'system',  text: '[ATTACK SIM] Initiating brute-force SSH simulation...' },
+        { delay: 600,  type: 'warning', text: '[SIM] Generating 1200 failed auth packets from 198.51.100.77' },
+        { delay: 1400, type: 'warning', text: '[13:XX:XX] ANOMALY DETECTED — 1,200 failed SSH attempts (198.51.100.77)' },
+        { delay: 2000, type: 'info',    text: '[GEMINI] Dispatching log batch to Vertex AI for analysis...' },
+        { delay: 2800, type: 'success', text: '[GEMINI] CRITICAL — Brute Force SSH Attack | Confidence: 97.2%' },
+        { delay: 3400, type: 'success', text: '[REMEDY] Invoking Cloud Armor — blocking IP 198.51.100.77' },
+        { delay: 3900, type: 'success', text: '[REMEDY] SSH key rotation triggered on affected VMs' },
+        { delay: 5000, type: 'success', text: '✓ THREAT NEUTRALIZED — MTTR: 0.31s | Auto-remediated' },
+      ],
+      iam_escalation: [
+        { delay: 0,    type: 'system',  text: '[ATTACK SIM] Initiating IAM Policy violation simulation...' },
+        { delay: 600,  type: 'warning', text: '[SIM] Principal "sa-prod-deployer" requesting roles/owner on root' },
+        { delay: 1500, type: 'error',   text: '[13:XX:XX] POLICY VIOLATION: Unauthorized privilege elevation detected' },
+        { delay: 2200, type: 'info',    text: '[GEMINI] Reasoning engine analyzing blast radius...' },
+        { delay: 3000, type: 'success', text: '[GEMINI] HIGH — Privilege Escalation | Confidence: 89.5%' },
+        { delay: 3800, type: 'success', text: '[REMEDY] Revoking roles/owner from sa-prod-deployer' },
+        { delay: 4500, type: 'info',    text: '[REMEDY] Isolation policy applied to associated service account' },
+        { delay: 5200, type: 'success', text: '✓ POLICY ENFORCED — MTTR: 0.44s' },
+      ],
+      data_exfil: [
+        { delay: 0,    type: 'system',  text: '[ATTACK SIM] Initiating Data Exfiltration simulation...' },
+        { delay: 600,  type: 'warning', text: '[SIM] GCS Bucket "prod-data-archive" reporting 4.2GB/min egress' },
+        { delay: 1500, type: 'error',   text: '[13:XX:XX] EGRESS SPIKE: Unusual traffic pattern detected' },
+        { delay: 2000, type: 'info',    text: '[GEMINI] Inspecting destination IP and metadata...' },
+        { delay: 3200, type: 'success', text: '[GEMINI] HIGH — Potential Data Exfiltration | Confidence: 82.1%' },
+        { delay: 4000, type: 'warning', text: '[REMEDY] Manual review required: Severity HIGH with confidence < 0.85' },
+        { delay: 4800, type: 'info',    text: '[SYSTEM] Security team alerted via PagerDuty' },
+      ],
+      api_flood: [
+        { delay: 0,    type: 'system',  text: '[ATTACK SIM] Initiating API Flood simulation...' },
+        { delay: 600,  type: 'warning', text: '[SIM] 15,000 req/sec spike on /api/v1/auth/exchange' },
+        { delay: 1500, type: 'warning', text: '[13:XX:XX] TRAFFIC ANOMALY: Rate limit exceeded for 42 IPs' },
+        { delay: 2000, type: 'info',    text: '[GEMINI] Analyzing request fingerprints...' },
+        { delay: 2800, type: 'success', text: '[GEMINI] MEDIUM — Distributed API Flood | Confidence: 74.5%' },
+        { delay: 3500, type: 'success', text: '[REMEDY] Dynamically lowering global rate limits for /auth/*' },
+        { delay: 4200, type: 'success', text: '✓ SERVICE STABILIZED — 98% threat traffic dropped' },
+      ],
+    };
+
+    const sequence = SEQUENCES[type] || SEQUENCES.brute_force_ssh;
 
     sequence.forEach(({ delay, type, text }) => {
       const t = setTimeout(() => addTerminalLine({ type, text }), delay);
