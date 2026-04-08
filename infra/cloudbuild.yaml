@@ -1,0 +1,84 @@
+steps:
+  # ── Step 1: Build & Push Backend to Artifact Registry ────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinel-zero/backend:$COMMIT_SHA'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinel-zero/backend:latest'
+      - './backend'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend'
+    waitFor: ['build-backend']
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinel-zero/backend'
+
+  # ── Step 2: Deploy Backend to Cloud Run ──────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-backend'
+    waitFor: ['push-backend']
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'sentinel-backend'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinel-zero/backend:$COMMIT_SHA'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--concurrency=80'
+      - '--max-instances=10'
+      - '--set-env-vars=PROJECT_ID=$PROJECT_ID,LOCATION=${_REGION},GEMINI_MODEL=${_GEMINI_MODEL}'
+
+  # ── Step 3: Build Frontend ────────────────────────────────────────────────
+  - name: 'node:20-alpine'
+    id: 'build-frontend'
+    waitFor: ['deploy-backend']
+    dir: 'frontend'
+    entrypoint: sh
+    args:
+      - '-c'
+      - |
+        npm ci
+        VITE_FIREBASE_API_KEY=${_FIREBASE_API_KEY} \
+        VITE_FIREBASE_AUTH_DOMAIN=${_FIREBASE_AUTH_DOMAIN} \
+        VITE_FIREBASE_PROJECT_ID=$PROJECT_ID \
+        VITE_FIREBASE_STORAGE_BUCKET=${_FIREBASE_STORAGE_BUCKET} \
+        VITE_FIREBASE_MESSAGING_SENDER_ID=${_FIREBASE_MESSAGING_SENDER_ID} \
+        VITE_FIREBASE_APP_ID=${_FIREBASE_APP_ID} \
+        npm run build
+
+  # ── Step 4: Deploy Frontend to Firebase Hosting ───────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-frontend'
+    waitFor: ['build-frontend']
+    dir: 'frontend'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        npm install -g firebase-tools
+        firebase deploy --only hosting --project $PROJECT_ID --token ${_FIREBASE_TOKEN}
+
+substitutions:
+  _REGION: us-central1
+  _GEMINI_MODEL: gemini-1.5-pro
+  _FIREBASE_API_KEY: ''
+  _FIREBASE_AUTH_DOMAIN: ''
+  _FIREBASE_STORAGE_BUCKET: ''
+  _FIREBASE_MESSAGING_SENDER_ID: ''
+  _FIREBASE_APP_ID: ''
+  _FIREBASE_TOKEN: ''
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+timeout: '1200s'

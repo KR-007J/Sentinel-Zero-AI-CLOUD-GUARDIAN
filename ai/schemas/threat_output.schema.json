@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SentinelThreatAnalysis",
+  "description": "Schema for Gemini threat analysis output",
+  "type": "object",
+  "required": [
+    "threat_id",
+    "severity",
+    "threat_type",
+    "affected_resources",
+    "confidence",
+    "summary",
+    "remediation_actions",
+    "estimated_impact",
+    "auto_remediate"
+  ],
+  "properties": {
+    "threat_id": { "type": "string" },
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+    },
+    "threat_type": { "type": "string" },
+    "affected_resources": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "summary": { "type": "string" },
+    "remediation_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "resource"],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "block_ip",
+              "rotate_ssh_keys",
+              "revoke_iam_role",
+              "disable_external_access",
+              "pause_bq_jobs",
+              "rate_limit",
+              "rotate_api_key",
+              "alert_security_team"
+            ]
+          },
+          "resource": { "type": "string" },
+          "params": { "type": "object" }
+        }
+      }
+    },
+    "estimated_impact": { "type": "string" },
+    "auto_remediate": { "type": "boolean" }
+  }
+}

@@ -1,0 +1,50 @@
+# ── Dependencies ─────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build outputs ─────────────────────────────────────────
+frontend/dist/
+frontend/.vite/
+backend/dist/
+
+# ── Env / secrets ─────────────────────────────────────────
+.env
+.env.local
+.env.production
+.env.*.local
+*.key
+*.pem
+
+# ── Firebase ───────────────────────────────────────────────
+.firebase/
+frontend/.firebaserc
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# ── GCP / Service Account keys ───────────────────────────
+*-credentials.json
+service-account*.json
+gcp-key*.json
+
+# ── OS ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ───────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# ── Logs ──────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+
+# ── Misc ──────────────────────────────────────────────────
+coverage/
+.nyc_output/
+*.tgz

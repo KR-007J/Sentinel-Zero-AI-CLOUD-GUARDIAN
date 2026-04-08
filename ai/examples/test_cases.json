@@ -1,0 +1,47 @@
+[
+  {
+    "description": "CRITICAL — Brute Force SSH",
+    "input": {
+      "resource": { "type": "gce_instance", "labels": { "instance_id": "vm-prod-east-1" } },
+      "textPayload": "847 failed SSH authentication attempts from 203.0.113.45 in 60 seconds",
+      "severity": "ERROR"
+    },
+    "expected_output": {
+      "severity": "CRITICAL",
+      "threat_type": "Brute Force SSH",
+      "confidence_min": 0.90,
+      "auto_remediate": true,
+      "required_actions": ["block_ip", "rotate_ssh_keys"]
+    }
+  },
+  {
+    "description": "HIGH — IAM Privilege Escalation",
+    "input": {
+      "resource": { "type": "project" },
+      "protoPayload": {
+        "methodName": "google.iam.v1.IAMPolicy.SetIamPolicy",
+        "authenticationInfo": { "principalEmail": "sa-prod@project.iam.gserviceaccount.com" }
+      },
+      "textPayload": "roles/owner granted outside change window"
+    },
+    "expected_output": {
+      "severity": "HIGH",
+      "threat_type": "Privilege Escalation",
+      "confidence_min": 0.80,
+      "auto_remediate": true,
+      "required_actions": ["revoke_iam_role"]
+    }
+  },
+  {
+    "description": "LOW — Benign scheduled job",
+    "input": {
+      "resource": { "type": "cloud_scheduler_job" },
+      "textPayload": "Scheduled job 'daily-backup' executed successfully"
+    },
+    "expected_output": {
+      "severity": "LOW",
+      "confidence_max": 0.30,
+      "auto_remediate": false
+    }
+  }
+]
