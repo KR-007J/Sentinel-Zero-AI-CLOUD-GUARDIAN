@@ -190,6 +190,7 @@ The dashboard is designed as a **cyberpunk security operations center**:
 - 🔴 **Color-coded Threat Levels** — CRITICAL (red pulse) → HIGH (orange) → MEDIUM (yellow) → LOW (green)
 - 📋 **Sliding Alert Panels** — Framer Motion animated threat detail panels
 - 💻 **Live Terminal Output** — Real-time remediation action log
+- 🕹️ **Simulation Hub** — Trigger realistic attack vectors (SSH Brute Force, IAM Escalation, etc.) to demo the pipeline
 - 💡 **Glowing Neon Theme** — Dark cyberpunk aesthetic with cyan/violet accents
 - 📊 **Live Metrics** — Threats blocked, MTTR, confidence scores
 
@@ -214,7 +215,7 @@ The dashboard is designed as a **cyberpunk security operations center**:
 ## 🧪 Demo Script
 
 1. **Show** the clean War Room dashboard with 3D network graph
-2. **Trigger** a simulated attack (brute force SSH / unusual IAM activity)
+2. **Trigger** a simulated attack from the **Simulation Hub** (e.g., SSH Brute Force)
 3. **Watch** the threat appear on the 3D graph with red pulsing node
 4. **Display** Gemini analysis in the sliding panel
 5. **Observe** automatic remediation in the live terminal
